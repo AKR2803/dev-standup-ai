@@ -249,17 +249,23 @@ docker-compose -f docker-compose.prod.yml up -d --scale backend=3
 
 ### Claude Model Selection
 
+**Cost-Optimized (Recommended for development):**
 ```bash
 # Anthropic Claude API models
-CLAUDE_MODEL=claude-3-5-sonnet-20241022      # Recommended
-CLAUDE_MODEL=claude-3-haiku-20240307         # Faster, cheaper
-CLAUDE_MODEL=claude-3-opus-20240229          # Most capable
+CLAUDE_MODEL=claude-3-haiku-20240307         # ~$0.25/1M tokens (input), ~$1.25/1M tokens (output)
+CLAUDE_MODEL=claude-3-5-sonnet-20241022      # ~$3/1M tokens (input), ~$15/1M tokens (output)
+CLAUDE_MODEL=claude-3-opus-20240229          # ~$15/1M tokens (input), ~$75/1M tokens (output)
 
-# AWS Bedrock model IDs
-BEDROCK_MODEL_ID=anthropic.claude-3-5-sonnet-20241022-v2:0
-BEDROCK_MODEL_ID=anthropic.claude-3-haiku-20240307-v1:0
-BEDROCK_MODEL_ID=anthropic.claude-3-opus-20240229-v1:0
+# AWS Bedrock model IDs (similar pricing)
+BEDROCK_MODEL_ID=anthropic.claude-3-haiku-20240307-v1:0      # Most cost-effective
+BEDROCK_MODEL_ID=anthropic.claude-3-5-sonnet-20241022-v2:0   # Balanced performance/cost
+BEDROCK_MODEL_ID=anthropic.claude-3-opus-20240229-v1:0       # Highest capability
 ```
+
+**Model Comparison:**
+- **Haiku**: 20x cheaper than Sonnet, 60x cheaper than Opus. Great for standups, basic reviews
+- **Sonnet**: Best balance of capability and cost. Use for complex code reviews
+- **Opus**: Most capable but expensive. Use only for critical analysis
 
 ### GitHub Configuration
 

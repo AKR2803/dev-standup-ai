@@ -72,6 +72,19 @@ class ClaudeService:
     
     async def generate_standup_summary(self, activities: List[DeveloperActivity]) -> TeamStandup:
         """Generate team standup summary from developer activities."""
+        logger.info("Generating standup summary", activities_count=len(activities))
+        
+        # Handle empty activities
+        if not activities:
+            logger.warning("No activities found for standup generation")
+            return TeamStandup(
+                date=datetime.utcnow(),
+                team_items=[],
+                summary="No recent activity found in the repository",
+                key_highlights=["No commits, PRs, or issues in the last 24 hours"],
+                team_blockers=[]
+            )
+        
         system_prompt = """You are an engineering assistant that creates concise, actionable standup summaries.
         
         Analyze the provided developer activity and generate a structured standup in this format:
@@ -90,6 +103,8 @@ class ClaudeService:
                 "issues": [{"title": i.title, "state": i.state} for i in activity.issues]
             }
             activity_data.append(activity_summary)
+        
+        logger.info("Activity data prepared", developers=len(activity_data))
         
         user_prompt = f"""Generate a standup summary for this team activity:
 

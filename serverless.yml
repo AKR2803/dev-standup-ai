@@ -1,0 +1,176 @@
+service: devstandup-ai
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: python3.11
+  region: ${opt:region, 'us-east-1'}
+  stage: ${opt:stage, 'dev'}
+  timeout: 30
+  memorySize: 512
+  architecture: arm64
+  layers:
+    - ${self:custom.layerArn}
+  
+  environment:
+    STAGE: ${self:provider.stage}
+    GITHUB_TOKEN: ${self:custom.config.GITHUB_TOKEN}
+    GITHUB_REPO_OWNER: ${self:custom.config.GITHUB_REPO_OWNER}
+    GITHUB_REPO_NAME: ${self:custom.config.GITHUB_REPO_NAME}
+    USE_BEDROCK: ${self:custom.config.USE_BEDROCK}
+    CLAUDE_API_KEY: ${self:custom.config.CLAUDE_API_KEY}
+    CLAUDE_MODEL: ${self:custom.config.CLAUDE_MODEL}
+    BEDROCK_MODEL_ID: ${self:custom.config.BEDROCK_MODEL_ID}
+    SLACK_BOT_TOKEN: ${self:custom.config.SLACK_BOT_TOKEN}
+    SLACK_SIGNING_SECRET: ${self:custom.config.SLACK_SIGNING_SECRET}
+    SLACK_CHANNEL: ${self:custom.config.SLACK_CHANNEL}
+    DYNAMODB_REGION: ${self:provider.region}
+    LOG_LEVEL: ${self:custom.config.LOG_LEVEL}
+  
+  iam:
+    role:
+      statements:
+        # DynamoDB permissions for all functions
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource:
+            - "arn:aws:dynamodb:${self:provider.region}:*:table/devstandup-*"
+        # Bedrock permissions for AI function
+        - Effect: Allow
+          Action:
+            - bedrock:InvokeModel
+          Resource:
+            - "arn:aws:bedrock:${self:provider.region}::foundation-model/anthropic.claude-*"
+        # CloudWatch Logs for all functions
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource:
+            - "arn:aws:logs:${self:provider.region}:*:*"
+
+functions:
+  # Individual Lambda per endpoint
+  getStandup:
+    handler: backend/src/lambda_get_standup.lambda_handler
+    timeout: 10
+    memorySize: 256
+    events:
+      - http:
+          path: /api/standup
+          method: GET
+          cors: true
+
+  generateStandup:
+    handler: backend/src/lambda_generate_standup.lambda_handler
+    timeout: 60
+    memorySize: 512
+    events:
+      - http:
+          path: /api/standup/generate
+          method: POST
+          cors: true
+
+  generateReview:
+    handler: backend/src/lambda_generate_review.lambda_handler
+    timeout: 60
+    memorySize: 512
+    events:
+      - http:
+          path: /api/reviews/generate
+          method: POST
+          cors: true
+
+  generateDocs:
+    handler: backend/src/lambda_generate_docs.lambda_handler
+    timeout: 30
+    memorySize: 256
+    events:
+      - http:
+          path: /api/docs/generate
+          method: POST
+          cors: true
+
+  generateTests:
+    handler: backend/src/lambda_generate_tests.lambda_handler
+    timeout: 30
+    memorySize: 256
+    events:
+      - http:
+          path: /api/tests/generate
+          method: POST
+          cors: true
+
+  githubSync:
+    handler: backend/src/lambda_github_sync.lambda_handler
+    timeout: 30
+    memorySize: 256
+    events:
+      - http:
+          path: /api/github/sync
+          method: POST
+          cors: true
+
+  slackWebhook:
+    handler: backend/src/lambda_slack.lambda_handler
+    timeout: 15
+    memorySize: 256
+    events:
+      - http:
+          path: /api/slack/webhook
+          method: POST
+          cors: true
+
+resources:
+  Resources:
+    StandupsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: devstandup-standups-${self:provider.stage}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        
+    ActivitiesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: devstandup-activities-${self:provider.stage}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: developer
+            AttributeType: S
+          - AttributeName: date
+            AttributeType: S
+        KeySchema:
+          - AttributeName: developer
+            KeyType: HASH
+          - AttributeName: date
+            KeyType: RANGE
+            
+    ReviewsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: devstandup-reviews-${self:provider.stage}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: pr_number
+            AttributeType: N
+        KeySchema:
+          - AttributeName: pr_number
+            KeyType: HASH
+
+custom:
+  config: ${file(./config.json):${self:provider.stage}}
+  layerArn: arn:aws:lambda:${self:provider.region}:${aws:accountId}:layer:devstandup-ai-dependencies:3

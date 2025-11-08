@@ -1,0 +1,228 @@
+{
+  "info": {
+    "name": "DevStandup AI API",
+    "description": "API collection for testing DevStandup AI Lambda functions",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://your-api-gateway-url.amazonaws.com/dev",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Get Standup",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/standup",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "standup"]
+        }
+      }
+    },
+    {
+      "name": "Generate Standup",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/standup/generate?hours=24",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "standup", "generate"],
+          "query": [
+            {
+              "key": "hours",
+              "value": "24"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Generate Review - All PRs",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/reviews/generate?hours=24",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "reviews", "generate"],
+          "query": [
+            {
+              "key": "hours",
+              "value": "24"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Generate Review - Specific PR",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/reviews/generate?pr_number=123&hours=24",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "reviews", "generate"],
+          "query": [
+            {
+              "key": "pr_number",
+              "value": "123"
+            },
+            {
+              "key": "hours",
+              "value": "24"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Generate Docstring",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"file_path\": \"src/utils.py\",\n  \"function_name\": \"process_data\",\n  \"code\": \"def process_data(data):\\n    return data.upper()\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/docs/generate",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "docs", "generate"]
+        }
+      }
+    },
+    {
+      "name": "Generate Unit Test",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"file_path\": \"src/utils.py\",\n  \"function_name\": \"process_data\",\n  \"code\": \"def process_data(data):\\n    return data.upper()\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/docs/generate",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "tests", "generate"]
+        }
+      }
+    },
+    {
+      "name": "GitHub Sync",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/github/sync?hours=24",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "github", "sync"],
+          "query": [
+            {
+              "key": "hours",
+              "value": "24"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Slack Webhook - Standup Command",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/x-www-form-urlencoded"
+          }
+        ],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "token",
+              "value": "xoxb-test-token"
+            },
+            {
+              "key": "team_id",
+              "value": "T1234567890"
+            },
+            {
+              "key": "team_domain",
+              "value": "example"
+            },
+            {
+              "key": "channel_id",
+              "value": "C1234567890"
+            },
+            {
+              "key": "channel_name",
+              "value": "general"
+            },
+            {
+              "key": "user_id",
+              "value": "U1234567890"
+            },
+            {
+              "key": "user_name",
+              "value": "testuser"
+            },
+            {
+              "key": "command",
+              "value": "/standup"
+            },
+            {
+              "key": "text",
+              "value": ""
+            },
+            {
+              "key": "response_url",
+              "value": "https://hooks.slack.com/commands/1234/5678"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/slack/webhook",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "slack", "webhook"]
+        }
+      }
+    }
+  ]
+}

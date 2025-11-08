@@ -1,7 +1,7 @@
 """GitHub API integration service."""
 import requests
 from typing import List, Dict, Any, Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from ..models.activity import GitHubCommit, GitHubPullRequest, GitHubIssue, DeveloperActivity
 from ..utils.config import settings
 from ..utils.logger import get_logger
@@ -30,7 +30,9 @@ class GitHubService:
         }
         
         try:
+            logger.info("Fetching commits", url=url, params=params)
             response = requests.get(url, headers=self.headers, params=params)
+            logger.info("GitHub API response", status_code=response.status_code)
             response.raise_for_status()
             commits_data = response.json()
             
@@ -151,6 +153,36 @@ class GitHubService:
             logger.error("Failed to fetch issues", error=str(e))
             return []
     
+    async def get_pull_request(self, pr_number: int) -> Optional[GitHubPullRequest]:
+        """Fetch a specific pull request."""
+        url = f"{self.base_url}/repos/{self.repo_owner}/{self.repo_name}/pulls/{pr_number}"
+        
+        try:
+            response = requests.get(url, headers=self.headers)
+            response.raise_for_status()
+            pr_data = response.json()
+            
+            return GitHubPullRequest(
+                number=pr_data["number"],
+                title=pr_data["title"],
+                body=pr_data["body"],
+                author=pr_data["user"]["login"],
+                state=pr_data["state"],
+                created_at=datetime.fromisoformat(
+                    pr_data["created_at"].replace("Z", "+00:00")
+                ),
+                updated_at=datetime.fromisoformat(
+                    pr_data["updated_at"].replace("Z", "+00:00")
+                ),
+                url=pr_data["html_url"],
+                diff_url=pr_data["diff_url"],
+                additions=pr_data.get("additions", 0),
+                deletions=pr_data.get("deletions", 0)
+            )
+        except requests.RequestException as e:
+            logger.error("Failed to fetch pull request", pr_number=pr_number, error=str(e))
+            return None
+    
     async def get_pr_diff(self, pr_number: int) -> Optional[str]:
         """Fetch the diff for a specific pull request."""
         url = f"{self.base_url}/repos/{self.repo_owner}/{self.repo_name}/pulls/{pr_number}"
@@ -177,11 +209,16 @@ class GitHubService:
         except requests.RequestException:
             return []
     
-    async def aggregate_developer_activity(self, since: datetime) -> List[DeveloperActivity]:
+    async def aggregate_developer_activity(self, hours: int) -> List[DeveloperActivity]:
         """Aggregate all activity by developer."""
+        since = datetime.now(timezone.utc) - timedelta(hours=hours)
+        logger.info("Aggregating activity", since=since.isoformat(), hours=hours)
+        
         commits = await self.get_recent_commits(since)
         prs = await self.get_recent_pull_requests(since)
         issues = await self.get_recent_issues(since)
+        
+        logger.info("Fetched GitHub data", commits=len(commits), prs=len(prs), issues=len(issues))
         
         # Group by developer
         developers = {}

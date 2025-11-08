@@ -1,5 +1,6 @@
 """DynamoDB service for data persistence."""
 import json
+import os
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 import boto3
@@ -17,19 +18,33 @@ class DynamoDBService:
     """Service for DynamoDB operations."""
     
     def __init__(self):
-        self.dynamodb = boto3.resource(
-            'dynamodb',
-            endpoint_url=settings.dynamodb_endpoint,
-            region_name=settings.dynamodb_region,
-            aws_access_key_id=settings.aws_access_key_id,
-            aws_secret_access_key=settings.aws_secret_access_key
-        )
-        self._ensure_tables()
+        # Configure DynamoDB resource based on environment
+        if settings.dynamodb_endpoint:
+            # Local development with custom endpoint
+            self.dynamodb = boto3.resource(
+                'dynamodb',
+                endpoint_url=settings.dynamodb_endpoint,
+                region_name=settings.dynamodb_region,
+                aws_access_key_id=settings.aws_access_key_id,
+                aws_secret_access_key=settings.aws_secret_access_key
+            )
+        else:
+            # AWS Lambda environment - use default credentials and region
+            self.dynamodb = boto3.resource(
+                'dynamodb',
+                region_name=settings.dynamodb_region
+            )
+        
+        # Don't create tables in Lambda - they should already exist
+        if settings.dynamodb_endpoint:
+            self._ensure_tables()
     
     def _ensure_tables(self):
         """Ensure required DynamoDB tables exist."""
+        # Use serverless.yml table names with stage suffix
+        stage = os.getenv('STAGE', 'dev')
         tables = {
-            'developer_activities': {
+            f'devstandup-activities-{stage}': {
                 'KeySchema': [
                     {'AttributeName': 'developer', 'KeyType': 'HASH'},
                     {'AttributeName': 'date', 'KeyType': 'RANGE'}
@@ -39,28 +54,20 @@ class DynamoDBService:
                     {'AttributeName': 'date', 'AttributeType': 'S'}
                 ]
             },
-            'team_standups': {
-                'KeySchema': [
-                    {'AttributeName': 'date', 'KeyType': 'HASH'}
-                ],
-                'AttributeDefinitions': [
-                    {'AttributeName': 'date', 'AttributeType': 'S'}
-                ]
-            },
-            'code_reviews': {
-                'KeySchema': [
-                    {'AttributeName': 'pr_number', 'KeyType': 'HASH'}
-                ],
-                'AttributeDefinitions': [
-                    {'AttributeName': 'pr_number', 'AttributeType': 'N'}
-                ]
-            },
-            'ai_generations': {
+            f'devstandup-standups-{stage}': {
                 'KeySchema': [
                     {'AttributeName': 'id', 'KeyType': 'HASH'}
                 ],
                 'AttributeDefinitions': [
                     {'AttributeName': 'id', 'AttributeType': 'S'}
+                ]
+            },
+            f'devstandup-reviews-{stage}': {
+                'KeySchema': [
+                    {'AttributeName': 'pr_number', 'KeyType': 'HASH'}
+                ],
+                'AttributeDefinitions': [
+                    {'AttributeName': 'pr_number', 'AttributeType': 'N'}
                 ]
             }
         }
@@ -83,7 +90,8 @@ class DynamoDBService:
     
     async def store_developer_activities(self, activities: List[DeveloperActivity]) -> bool:
         """Store developer activities in DynamoDB."""
-        table = self.dynamodb.Table('developer_activities')
+        stage = os.getenv('STAGE', 'dev')
+        table = self.dynamodb.Table(f'devstandup-activities-{stage}')
         
         try:
             with table.batch_writer() as batch:
@@ -111,7 +119,8 @@ class DynamoDBService:
     
     async def get_developer_activities(self, date: datetime) -> List[DeveloperActivity]:
         """Retrieve developer activities for a specific date."""
-        table = self.dynamodb.Table('developer_activities')
+        stage = os.getenv('STAGE', 'dev')
+        table = self.dynamodb.Table(f'devstandup-activities-{stage}')
         date_str = date.date().isoformat()
         
         try:
@@ -143,10 +152,12 @@ class DynamoDBService:
     
     async def store_team_standup(self, standup: TeamStandup) -> bool:
         """Store team standup summary."""
-        table = self.dynamodb.Table('team_standups')
+        stage = os.getenv('STAGE', 'dev')
+        table = self.dynamodb.Table(f'devstandup-standups-{stage}')
         
         try:
             item = {
+                'id': standup.date.date().isoformat(),
                 'date': standup.date.date().isoformat(),
                 'team_items': [item.dict() for item in standup.team_items],
                 'summary': standup.summary,
@@ -167,7 +178,8 @@ class DynamoDBService:
     
     async def get_latest_standup(self) -> Optional[TeamStandup]:
         """Get the most recent team standup."""
-        table = self.dynamodb.Table('team_standups')
+        stage = os.getenv('STAGE', 'dev')
+        table = self.dynamodb.Table(f'devstandup-standups-{stage}')
         
         try:
             response = table.scan()
@@ -196,7 +208,8 @@ class DynamoDBService:
     
     async def store_code_review(self, review: CodeReview) -> bool:
         """Store code review results."""
-        table = self.dynamodb.Table('code_reviews')
+        stage = os.getenv('STAGE', 'dev')
+        table = self.dynamodb.Table(f'devstandup-reviews-{stage}')
         
         try:
             item = {
@@ -223,7 +236,8 @@ class DynamoDBService:
     
     async def get_code_review(self, pr_number: int) -> Optional[CodeReview]:
         """Retrieve code review for a specific PR."""
-        table = self.dynamodb.Table('code_reviews')
+        stage = os.getenv('STAGE', 'dev')
+        table = self.dynamodb.Table(f'devstandup-reviews-{stage}')
         
         try:
             response = table.get_item(Key={'pr_number': pr_number})

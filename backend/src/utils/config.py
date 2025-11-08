@@ -1,53 +1,45 @@
 """Configuration management for the application."""
 import os
 from typing import List
-from pydantic import BaseSettings, Field
 
 
-class Settings(BaseSettings):
+class Settings:
     """Application settings loaded from environment variables."""
     
-    # API Configuration
-    api_port: int = Field(default=8000, env="API_PORT")
-    api_host: str = Field(default="0.0.0.0", env="API_HOST")
-    cors_origins: List[str] = Field(default=["http://localhost:3000"], env="CORS_ORIGINS")
-    
-    # GitHub Integration
-    github_token: str = Field(..., env="GITHUB_TOKEN")
-    github_repo_owner: str = Field(..., env="GITHUB_REPO_OWNER")
-    github_repo_name: str = Field(..., env="GITHUB_REPO_NAME")
-    
-    # Claude API (Anthropic or Bedrock)
-    use_bedrock: bool = Field(default=False, env="USE_BEDROCK")
-    claude_api_key: str = Field(default="", env="CLAUDE_API_KEY")
-    claude_model: str = Field(default="claude-3-5-sonnet-20241022", env="CLAUDE_MODEL")
-    
-    # AWS Bedrock Configuration
-    aws_region: str = Field(default="us-east-1", env="AWS_REGION")
-    bedrock_model_id: str = Field(default="anthropic.claude-3-5-sonnet-20241022-v2:0", env="BEDROCK_MODEL_ID")
-    
-    # Slack Integration
-    slack_bot_token: str = Field(..., env="SLACK_BOT_TOKEN")
-    slack_signing_secret: str = Field(..., env="SLACK_SIGNING_SECRET")
-    slack_channel: str = Field(default="#standup", env="SLACK_CHANNEL")
-    
-    # DynamoDB
-    dynamodb_endpoint: str = Field(default="http://localhost:8001", env="DYNAMODB_ENDPOINT")
-    dynamodb_region: str = Field(default="us-east-1", env="DYNAMODB_REGION")
-    aws_access_key_id: str = Field(default="local", env="AWS_ACCESS_KEY_ID")
-    aws_secret_access_key: str = Field(default="local", env="AWS_SECRET_ACCESS_KEY")
-    
-    # Logging
-    log_level: str = Field(default="INFO", env="LOG_LEVEL")
-    
-    class Config:
-        env_file = ".env"
-        case_sensitive = False
+    def __init__(self):
+        # API Configuration
+        self.api_port = int(os.getenv("API_PORT", "8000"))
+        self.api_host = os.getenv("API_HOST", "0.0.0.0")
+        cors_origins_str = os.getenv("CORS_ORIGINS", "http://localhost:3000")
+        self.cors_origins = [origin.strip() for origin in cors_origins_str.split(",")]
         
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        if isinstance(self.cors_origins, str):
-            self.cors_origins = [origin.strip() for origin in self.cors_origins.split(",")]
+        # GitHub Integration
+        self.github_token = os.getenv("GITHUB_TOKEN", "")
+        self.github_repo_owner = os.getenv("GITHUB_REPO_OWNER", "")
+        self.github_repo_name = os.getenv("GITHUB_REPO_NAME", "")
+        
+        # Claude API (Anthropic or Bedrock)
+        self.use_bedrock = os.getenv("USE_BEDROCK", "false").lower() == "true"
+        self.claude_api_key = os.getenv("CLAUDE_API_KEY", "")
+        self.claude_model = os.getenv("CLAUDE_MODEL", "claude-3-haiku-20240307")
+        
+        # AWS Bedrock Configuration
+        self.aws_region = os.getenv("AWS_REGION", "us-east-1")
+        self.bedrock_model_id = os.getenv("BEDROCK_MODEL_ID", "anthropic.claude-3-haiku-20240307-v1:0")
+        
+        # Slack Integration
+        self.slack_bot_token = os.getenv("SLACK_BOT_TOKEN", "")
+        self.slack_signing_secret = os.getenv("SLACK_SIGNING_SECRET", "")
+        self.slack_channel = os.getenv("SLACK_CHANNEL", "#standup")
+        
+        # DynamoDB
+        self.dynamodb_endpoint = os.getenv("DYNAMODB_ENDPOINT", "")
+        self.dynamodb_region = os.getenv("DYNAMODB_REGION", "us-east-1")
+        self.aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID", "")
+        self.aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY", "")
+        
+        # Logging
+        self.log_level = os.getenv("LOG_LEVEL", "INFO")
 
 
 settings = Settings()

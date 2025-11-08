@@ -1,0 +1,128 @@
+{
+  "commits": [
+    {
+      "sha": "abc123def456",
+      "commit": {
+        "message": "Fix authentication bug in login flow",
+        "author": {
+          "name": "John Doe",
+          "email": "john@example.com",
+          "date": "2023-11-07T10:00:00Z"
+        }
+      },
+      "html_url": "https://github.com/owner/repo/commit/abc123def456",
+      "files": [
+        {
+          "filename": "src/auth/login.py",
+          "status": "modified",
+          "additions": 15,
+          "deletions": 5
+        }
+      ]
+    },
+    {
+      "sha": "def456ghi789",
+      "commit": {
+        "message": "Add unit tests for user service",
+        "author": {
+          "name": "Jane Smith",
+          "email": "jane@example.com",
+          "date": "2023-11-07T14:30:00Z"
+        }
+      },
+      "html_url": "https://github.com/owner/repo/commit/def456ghi789",
+      "files": [
+        {
+          "filename": "tests/test_user_service.py",
+          "status": "added",
+          "additions": 45,
+          "deletions": 0
+        }
+      ]
+    }
+  ],
+  "pull_requests": [
+    {
+      "number": 42,
+      "title": "Implement user profile management",
+      "body": "This PR adds comprehensive user profile management features including:\n- Profile editing\n- Avatar upload\n- Privacy settings",
+      "user": {
+        "login": "alice_dev",
+        "id": 12345
+      },
+      "state": "open",
+      "created_at": "2023-11-06T16:00:00Z",
+      "updated_at": "2023-11-07T09:15:00Z",
+      "html_url": "https://github.com/owner/repo/pull/42",
+      "diff_url": "https://github.com/owner/repo/pull/42.diff",
+      "additions": 120,
+      "deletions": 25,
+      "changed_files": 8
+    },
+    {
+      "number": 43,
+      "title": "Fix memory leak in data processing",
+      "body": "Resolves issue #156 by properly disposing of resources",
+      "user": {
+        "login": "bob_engineer",
+        "id": 67890
+      },
+      "state": "closed",
+      "created_at": "2023-11-05T11:00:00Z",
+      "updated_at": "2023-11-07T08:45:00Z",
+      "html_url": "https://github.com/owner/repo/pull/43",
+      "diff_url": "https://github.com/owner/repo/pull/43.diff",
+      "additions": 35,
+      "deletions": 15,
+      "changed_files": 3
+    }
+  ],
+  "issues": [
+    {
+      "number": 156,
+      "title": "Memory leak in data processing module",
+      "body": "The data processing module appears to have a memory leak when processing large datasets. Memory usage grows continuously and is not released.",
+      "user": {
+        "login": "charlie_qa",
+        "id": 11111
+      },
+      "state": "closed",
+      "created_at": "2023-11-03T14:20:00Z",
+      "updated_at": "2023-11-07T08:45:00Z",
+      "html_url": "https://github.com/owner/repo/issues/156",
+      "labels": [
+        {
+          "name": "bug",
+          "color": "d73a4a"
+        },
+        {
+          "name": "priority-high",
+          "color": "ff6b6b"
+        }
+      ]
+    },
+    {
+      "number": 157,
+      "title": "Add dark mode support",
+      "body": "Users have requested dark mode support for better accessibility and user experience during night time usage.",
+      "user": {
+        "login": "diana_ux",
+        "id": 22222
+      },
+      "state": "open",
+      "created_at": "2023-11-07T12:00:00Z",
+      "updated_at": "2023-11-07T12:00:00Z",
+      "html_url": "https://github.com/owner/repo/issues/157",
+      "labels": [
+        {
+          "name": "enhancement",
+          "color": "a2eeef"
+        },
+        {
+          "name": "ui/ux",
+          "color": "fef2c0"
+        }
+      ]
+    }
+  ]
+}

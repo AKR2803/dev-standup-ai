@@ -436,6 +436,24 @@ body {
     color: #991b1b;
 }
 
+.approval-status {
+    margin-left: 12px;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.approval-status.approved {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.approval-status.rejected {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
 .review-findings {
     margin-bottom: 24px;
 }

@@ -492,9 +492,10 @@ class UIManager {
         // Review header
         document.getElementById('review-title').textContent = `PR #${review.pr_number}: ${review.pr_title}`;
         
-        // Score with color coding
+        // Score with color coding and approval status
         const scoreElement = document.getElementById('review-score');
-        scoreElement.textContent = `${review.overall_score}/10`;
+        const approvalStatus = review.approved ? '✅ Approved' : '❌ Changes Requested';
+        scoreElement.innerHTML = `${review.overall_score}/10 <span class="approval-status ${review.approved ? 'approved' : 'rejected'}">${approvalStatus}</span>`;
         scoreElement.className = 'review-score ' + 
             (review.overall_score >= 8 ? 'high' : review.overall_score >= 6 ? 'medium' : 'low');
         

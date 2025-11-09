@@ -6,6 +6,8 @@ tags: []
 
 # DevStandup AI
 
+![DevStandup AI Thumbnail](/frontend/thumbnail.png)
+
 AI-powered development team standup automation using GitHub activity analysis and Claude AI.
 
 ## Features

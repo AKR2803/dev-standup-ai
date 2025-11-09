@@ -20,7 +20,7 @@ AI-powered development team standup automation using GitHub activity analysis an
 
 - **Backend**: FastAPI with Claude AI integration
 - **Frontend**: React + TypeScript + Tailwind CSS
-- **Database**: DynamoDB (local for development)
+- **Database**: DynamoDB
 - **AI Models**: Claude 3.5 Sonnet via Anthropic API or AWS Bedrock
 
 ## Quick Start (Local Development)

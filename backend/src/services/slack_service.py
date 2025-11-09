@@ -1,7 +1,7 @@
 """Slack integration service."""
+import json
+import requests
 from typing import Dict, Any, Optional
-from slack_sdk import WebClient
-from slack_sdk.errors import SlackApiError
 from ..models.standup import TeamStandup
 from ..models.review import CodeReview
 from ..utils.config import settings
@@ -14,43 +14,46 @@ class SlackService:
     """Service for Slack integration."""
     
     def __init__(self):
-        self.client = WebClient(token=settings.slack_bot_token)
-        self.channel = settings.slack_channel
+        self.webhook_url = settings.slack_webhook_url
     
-    async def post_standup_summary(self, standup: TeamStandup) -> bool:
+    def post_standup_summary(self, standup: TeamStandup) -> bool:
         """Post standup summary to Slack channel."""
         try:
             # Format standup message
-            message = self._format_standup_message(standup)
+            blocks = self._format_standup_message(standup)
             
-            response = self.client.chat_postMessage(
-                channel=self.channel,
-                text="Daily Standup Summary",
-                blocks=message
-            )
+            payload = {
+                "text": "Daily Standup Summary",
+                "blocks": blocks
+            }
             
-            logger.info("Posted standup to Slack", channel=self.channel, ts=response["ts"])
+            response = requests.post(self.webhook_url, json=payload)
+            response.raise_for_status()
+            
+            logger.info("Posted standup to Slack via webhook")
             return True
             
-        except SlackApiError as e:
+        except Exception as e:
             logger.error("Failed to post standup to Slack", error=str(e))
             return False
     
-    async def post_pr_review(self, review: CodeReview) -> bool:
+    def post_pr_review(self, review: CodeReview) -> bool:
         """Post PR review summary to Slack channel."""
         try:
-            message = self._format_review_message(review)
+            blocks = self._format_review_message(review)
             
-            response = self.client.chat_postMessage(
-                channel=self.channel,
-                text=f"PR Review: {review.pr_title}",
-                blocks=message
-            )
+            payload = {
+                "text": f"PR Review: {review.pr_title}",
+                "blocks": blocks
+            }
             
-            logger.info("Posted PR review to Slack", pr_number=review.pr_number, ts=response["ts"])
+            response = requests.post(self.webhook_url, json=payload)
+            response.raise_for_status()
+            
+            logger.info("Posted PR review to Slack via webhook", pr_number=review.pr_number)
             return True
             
-        except SlackApiError as e:
+        except Exception as e:
             logger.error("Failed to post PR review to Slack", error=str(e))
             return False
     
@@ -208,7 +211,7 @@ class SlackService:
         
         return blocks
     
-    async def handle_slash_command(self, command: str, text: str, user_id: str) -> Dict[str, Any]:
+    def handle_slash_command(self, command: str, text: str, user_id: str) -> Dict[str, Any]:
         """Handle Slack slash commands."""
         if command == "/standup":
             return {

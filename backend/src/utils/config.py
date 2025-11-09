@@ -28,9 +28,8 @@ class Settings:
         self.bedrock_model_id = os.getenv("BEDROCK_MODEL_ID", "anthropic.claude-3-haiku-20240307-v1:0")
         
         # Slack Integration
-        self.slack_bot_token = os.getenv("SLACK_BOT_TOKEN", "")
+        self.slack_webhook_url = os.getenv("SLACK_WEBHOOK_URL", "")
         self.slack_signing_secret = os.getenv("SLACK_SIGNING_SECRET", "")
-        self.slack_channel = os.getenv("SLACK_CHANNEL", "#standup")
         
         # DynamoDB
         self.dynamodb_endpoint = os.getenv("DYNAMODB_ENDPOINT", "")

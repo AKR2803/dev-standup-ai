@@ -22,9 +22,7 @@ provider:
     CLAUDE_API_KEY: ${self:custom.config.CLAUDE_API_KEY}
     CLAUDE_MODEL: ${self:custom.config.CLAUDE_MODEL}
     BEDROCK_MODEL_ID: ${self:custom.config.BEDROCK_MODEL_ID}
-    SLACK_BOT_TOKEN: ${self:custom.config.SLACK_BOT_TOKEN}
-    SLACK_SIGNING_SECRET: ${self:custom.config.SLACK_SIGNING_SECRET}
-    SLACK_CHANNEL: ${self:custom.config.SLACK_CHANNEL}
+    SLACK_WEBHOOK_URL: ${self:custom.config.SLACK_WEBHOOK_URL}
     DYNAMODB_REGION: ${self:provider.region}
     LOG_LEVEL: ${self:custom.config.LOG_LEVEL}
   
@@ -126,6 +124,16 @@ functions:
     events:
       - http:
           path: /api/slack/webhook
+          method: POST
+          cors: true
+
+  slackPost:
+    handler: backend/src/lambda_slack_post.lambda_handler
+    timeout: 15
+    memorySize: 256
+    events:
+      - http:
+          path: /api/slack/post
           method: POST
           cors: true
 

@@ -1,4 +1,4 @@
-"""Lambda handler for Slack webhook."""
+"""Lambda handler for Slack post operations."""
 import json
 import asyncio
 from typing import Dict, Any
@@ -10,13 +10,13 @@ slack_handler = SlackIntegrationHandler()
 
 
 def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
-    """Handle Slack webhook events."""
+    """Handle Slack post standup operations."""
     try:
-        logger.info("Slack webhook request")
-        return asyncio.run(slack_handler.handle_webhook(event, context))
+        logger.info("Slack post request")
+        return asyncio.run(slack_handler.post_standup(event, context))
             
     except Exception as e:
-        logger.error("Slack webhook error", error=str(e))
+        logger.error("Slack post error", error=str(e))
         return {
             'statusCode': 500,
             'headers': {'Content-Type': 'application/json'},

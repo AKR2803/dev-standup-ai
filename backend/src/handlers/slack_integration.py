@@ -61,7 +61,7 @@ class SlackIntegrationHandler:
             
             logger.info("Handling slash command", command=command, user_id=user_id)
             
-            response = await self.slack_service.handle_slash_command(command, text, user_id)
+            response = self.slack_service.handle_slash_command(command, text, user_id)
             
             return {
                 'statusCode': 200,
@@ -112,6 +112,9 @@ class SlackIntegrationHandler:
     async def post_standup(self, event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         """Post standup summary to Slack."""
         try:
+            from ..models.standup import TeamStandup, StandupItem
+            from datetime import datetime
+            
             body = json.loads(event.get('body', '{}'))
             standup_data = body.get('standup')
             
@@ -122,13 +125,30 @@ class SlackIntegrationHandler:
                     'body': json.dumps({'error': 'Missing standup data'})
                 }
             
-            await self.slack_service.post_standup_summary(standup_data)
+            # Convert to TeamStandup object
+            team_items = [StandupItem(**item) for item in standup_data.get('team_items', [])]
+            standup = TeamStandup(
+                date=datetime.fromisoformat(standup_data['date'].replace('Z', '+00:00')),
+                team_items=team_items,
+                summary=standup_data.get('summary'),
+                key_highlights=standup_data.get('key_highlights', []),
+                team_blockers=standup_data.get('team_blockers', [])
+            )
             
-            return {
-                'statusCode': 200,
-                'headers': {'Content-Type': 'application/json'},
-                'body': json.dumps({'message': 'Standup posted to Slack'})
-            }
+            success = self.slack_service.post_standup_summary(standup)
+            
+            if success:
+                return {
+                    'statusCode': 200,
+                    'headers': {'Content-Type': 'application/json'},
+                    'body': json.dumps({'message': 'Standup posted to Slack successfully'})
+                }
+            else:
+                return {
+                    'statusCode': 500,
+                    'headers': {'Content-Type': 'application/json'},
+                    'body': json.dumps({'error': 'Failed to post to Slack'})
+                }
         
         except Exception as e:
             logger.error("Failed to post standup", error=str(e))

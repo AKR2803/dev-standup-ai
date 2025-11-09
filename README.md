@@ -335,6 +335,8 @@ aws dynamodb scan --table-name standups --endpoint-url http://localhost:8001
 4. Push to branch: `git push origin feature/amazing-feature`
 5. Open Pull Request
 
+## If this repo was useful, consider starring it.⭐
+
 ## License
 
 MIT License - see LICENSE file for details.

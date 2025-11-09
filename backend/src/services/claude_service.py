@@ -108,7 +108,8 @@ class ClaudeService:
 
 {json.dumps(activity_data, indent=2)}
 
-Return a JSON response with this structure:
+IMPORTANT: Return ONLY valid JSON with this exact structure (no additional text before or after):
+
 {{
     "team_items": [
         {{
@@ -121,11 +122,31 @@ Return a JSON response with this structure:
     "summary": "Brief team overview",
     "key_highlights": ["highlight1", "highlight2"],
     "team_blockers": ["team-wide blocker"]
-}}"""
+}}
+
+Respond with valid JSON only."""
         
         try:
             response_text = await self._invoke_claude(system_prompt, user_prompt, 2000)
-            result = json.loads(response_text)
+            logger.info("Claude response for standup", response_length=len(response_text))
+            
+            if not response_text or not response_text.strip():
+                logger.error("Empty response from Claude for standup")
+                raise ValueError("Empty response from Claude API")
+            
+            # Clean the response - Claude sometimes adds extra text before/after JSON
+            response_text = response_text.strip()
+            
+            # Find JSON content between first { and last }
+            start_idx = response_text.find('{')
+            end_idx = response_text.rfind('}') + 1
+            
+            if start_idx == -1 or end_idx == 0:
+                logger.error("No JSON found in Claude standup response", response_sample=response_text[:500])
+                raise ValueError("No valid JSON found in Claude response")
+            
+            json_content = response_text[start_idx:end_idx]
+            result = json.loads(json_content)
             
             team_items = [StandupItem(**item) for item in result["team_items"]]
             
@@ -151,6 +172,22 @@ Return a JSON response with this structure:
     
     async def review_pull_request(self, pr_number: int, pr_title: str, diff_content: str) -> CodeReview:
         """Generate AI code review for a pull request."""
+        logger.info("Starting PR review", pr_number=pr_number, diff_length=len(diff_content) if diff_content else 0)
+        
+        # Check if diff content is valid
+        if not diff_content or not diff_content.strip():
+            logger.warning("Empty or invalid diff content", pr_number=pr_number)
+            return CodeReview(
+                pr_number=pr_number,
+                pr_title=pr_title,
+                timestamp=datetime.utcnow(),
+                summary="No changes to review - empty diff",
+                overall_score=5,
+                findings=[],
+                suggestions=["No code changes found in this PR"],
+                approved=False
+            )
+        
         system_prompt = """You are a senior software engineer conducting a thorough code review.
         
         Analyze the provided code diff and provide structured feedback focusing on:
@@ -170,7 +207,8 @@ PR Number: {pr_number}
 Diff:
 {diff_content}
 
-Return a JSON response with this structure:
+IMPORTANT: Return ONLY valid JSON with this exact structure (no additional text before or after):
+
 {{
     "summary": "Brief review summary",
     "overall_score": 8,
@@ -190,11 +228,33 @@ Return a JSON response with this structure:
 }}
 
 Severity levels: critical, high, medium, low, info
-Categories: logic, security, performance, style, testing"""
+Categories: logic, security, performance, style, testing
+
+Respond with valid JSON only."""
         
         try:
             response_text = await self._invoke_claude(system_prompt, user_prompt, 3000)
-            result = json.loads(response_text)
+            logger.info("Claude response for PR review", pr_number=pr_number, response_length=len(response_text))
+            
+            if not response_text or not response_text.strip():
+                logger.error("Empty response from Claude", pr_number=pr_number)
+                raise ValueError("Empty response from Claude API")
+            
+            # Clean the response - Claude sometimes adds extra text before/after JSON
+            response_text = response_text.strip()
+            
+            # Find JSON content between first { and last }
+            start_idx = response_text.find('{')
+            end_idx = response_text.rfind('}') + 1
+            
+            if start_idx == -1 or end_idx == 0:
+                logger.error("No JSON found in Claude response", pr_number=pr_number, response_sample=response_text[:500])
+                raise ValueError("No valid JSON found in Claude response")
+            
+            json_content = response_text[start_idx:end_idx]
+            logger.info("Extracted JSON content", pr_number=pr_number, json_length=len(json_content))
+            
+            result = json.loads(json_content)
             
             findings = []
             for finding_data in result.get("findings", []):

@@ -1,9 +1,3 @@
----
-noteId: "13d76bb0bcdb11f0bf24976974e5e5fc"
-tags: []
-
----
-
 # DevStandup AI
 
 AI-powered development team standup automation using GitHub activity analysis and Claude AI.
@@ -19,11 +13,11 @@ AI-powered development team standup automation using GitHub activity analysis an
 ## Architecture
 
 - **Backend**: FastAPI with Claude AI integration
-- **Frontend**: React + TypeScript + Tailwind CSS
+- **Frontend**: HTML CSS (currently) React + TypeScript + Tailwind CSS(in future)
 - **Database**: DynamoDB (local for development)
 - **AI Models**: Claude 3.5 Sonnet via Anthropic API or AWS Bedrock
 
-## Quick Start (Local Development)
+## Quick Start (Local Development, for future setup)
 
 ### Prerequisites
 

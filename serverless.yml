@@ -137,6 +137,16 @@ functions:
           method: POST
           cors: true
 
+  health:
+    handler: backend/src/lambda_health.lambda_handler
+    timeout: 10
+    memorySize: 128
+    events:
+      - http:
+          path: /api/health
+          method: GET
+          cors: true
+
 resources:
   Resources:
     StandupsTable:

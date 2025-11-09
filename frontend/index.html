@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevStandup AI</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>DevStandup AI</h1>
+            <p>Automated standup generation and code analysis</p>
+        </header>
+
+        <main class="main">
+            <!-- Home Page -->
+            <section id="home-page" class="page active">
+                <div class="page-header">
+                    <h2>Repository Dashboard</h2>
+                    <button id="refresh-btn" class="btn btn-secondary">
+                        <span class="icon">🔄</span>
+                        Refresh
+                    </button>
+                </div>
+                
+                <div class="repo-table-container">
+                    <table id="repo-table" class="repo-table">
+                        <thead>
+                            <tr>
+                                <th>Repository</th>
+                                <th>Last Sync</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="repo-table-body">
+                            <!-- Repos will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="loading-repos" class="loading hidden">
+                    <div class="spinner"></div>
+                    <p>Loading repositories...</p>
+                </div>
+            </section>
+
+            <!-- Sync Actions Page -->
+            <section id="sync-page" class="page">
+                <div class="page-header">
+                    <button id="back-to-home" class="btn btn-secondary">← Back</button>
+                    <h2 id="sync-repo-name">Repository Sync</h2>
+                </div>
+
+                <div class="sync-info">
+                    <div class="sync-status">
+                        <h3>Sync Status</h3>
+                        <p id="last-sync-time">Last sync: Never</p>
+                        <p id="sync-help-text" class="sync-help">Sync is required before using actions</p>
+                        <button id="sync-now-btn" class="btn btn-primary">Sync Now</button>
+                    </div>
+
+                    <div id="sync-actions" class="action-dropdown hidden">
+                        <h3>Available Actions</h3>
+                        <div class="action-buttons">
+                            <button id="generate-standup-btn" class="btn btn-action">
+                                <span class="icon">📊</span>
+                                Generate Standup
+                            </button>
+                            <button id="generate-docs-btn" class="btn btn-action">
+                                <span class="icon">📝</span>
+                                Generate Docstring
+                            </button>
+                            <button id="generate-tests-btn" class="btn btn-action">
+                                <span class="icon">🧪</span>
+                                Generate Test Cases
+                            </button>
+                            <button id="generate-review-btn" class="btn btn-action">
+                                <span class="icon">🔍</span>
+                                Generate PR Review
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Standup Page -->
+            <section id="standup-page" class="page">
+                <div class="page-header">
+                    <button id="back-to-sync" class="btn btn-secondary">← Back</button>
+                    <h2>Generated Standup</h2>
+                </div>
+
+                <div id="standup-content" class="content-area">
+                    <div id="standup-loading" class="loading">
+                        <div class="spinner"></div>
+                        <p>Generating standup...</p>
+                    </div>
+                    
+                    <div id="standup-result" class="result-container hidden">
+                        <div class="standup-summary">
+                            <h3>Team Summary</h3>
+                            <p id="standup-summary-text"></p>
+                        </div>
+                        
+                        <div class="standup-highlights">
+                            <h3>Key Highlights</h3>
+                            <ul id="standup-highlights-list"></ul>
+                        </div>
+                        
+                        <div class="standup-items">
+                            <h3>Team Updates</h3>
+                            <div id="standup-items-container"></div>
+                        </div>
+                        
+                        <div class="standup-actions">
+                            <button id="send-to-slack-btn" class="btn btn-primary">
+                                <span class="icon">💬</span>
+                                Send to Slack
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Docstring Page -->
+            <section id="docstring-page" class="page">
+                <div class="page-header">
+                    <button id="back-to-sync-docs" class="btn btn-secondary">← Back</button>
+                    <h2>Generate Docstring</h2>
+                </div>
+
+                <div class="file-input-section">
+                    <div class="input-group">
+                        <label for="file-path-input">File Path:</label>
+                        <input type="text" id="file-path-input" placeholder="e.g., backend/src/services/github_service.py">
+                    </div>
+                    <button id="generate-docs-submit" class="btn btn-primary">Generate Docstring</button>
+                </div>
+
+                <div id="docstring-content" class="content-area">
+                    <div id="docstring-loading" class="loading hidden">
+                        <div class="spinner"></div>
+                        <p>Generating docstring...</p>
+                    </div>
+                    
+                    <div id="docstring-result" class="code-comparison hidden">
+                        <div class="code-panel">
+                            <h3>Original Code</h3>
+                            <pre id="original-code"></pre>
+                        </div>
+                        <div class="code-panel">
+                            <h3>Generated Docstring</h3>
+                            <pre id="generated-docstring"></pre>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Test Cases Page -->
+            <section id="tests-page" class="page">
+                <div class="page-header">
+                    <button id="back-to-sync-tests" class="btn btn-secondary">← Back</button>
+                    <h2>Generate Test Cases</h2>
+                </div>
+
+                <div class="file-input-section">
+                    <div class="input-group">
+                        <label for="test-file-path-input">File Path:</label>
+                        <input type="text" id="test-file-path-input" placeholder="e.g., backend/src/services/github_service.py">
+                    </div>
+                    <button id="generate-tests-submit" class="btn btn-primary">Generate Tests</button>
+                </div>
+
+                <div id="tests-content" class="content-area">
+                    <div id="tests-loading" class="loading hidden">
+                        <div class="spinner"></div>
+                        <p>Generating test cases...</p>
+                    </div>
+                    
+                    <div id="tests-result" class="result-container hidden">
+                        <div class="test-info">
+                            <h3>Generated Test Cases</h3>
+                            <p id="test-framework"></p>
+                            <p id="coverage-estimate"></p>
+                        </div>
+                        <div class="code-panel">
+                            <pre id="generated-tests"></pre>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PR Review Page -->
+            <section id="review-page" class="page">
+                <div class="page-header">
+                    <button id="back-to-sync-review" class="btn btn-secondary">← Back</button>
+                    <h2>Generate PR Review</h2>
+                </div>
+
+                <div class="review-input-section">
+                    <div class="input-group">
+                        <label for="pr-number-input">PR Number (optional):</label>
+                        <input type="number" id="pr-number-input" placeholder="e.g., 123">
+                    </div>
+                    <div class="input-group">
+                        <label for="review-hours-input">Hours to look back:</label>
+                        <input type="number" id="review-hours-input" value="24" min="1" max="168">
+                    </div>
+                    <button id="generate-review-submit" class="btn btn-primary">Generate Review</button>
+                </div>
+
+                <div id="review-content" class="content-area">
+                    <div id="review-loading" class="loading hidden">
+                        <div class="spinner"></div>
+                        <p>Generating PR review...</p>
+                    </div>
+                    
+                    <div id="review-result" class="result-container hidden">
+                        <div id="review-summary" class="review-summary">
+                            <h3>Review Summary</h3>
+                            <div class="review-header">
+                                <span id="review-title"></span>
+                                <span id="review-score" class="review-score"></span>
+                            </div>
+                            <p id="review-summary-text"></p>
+                        </div>
+                        
+                        <div id="review-findings" class="review-findings">
+                            <h3>Findings</h3>
+                            <div id="review-findings-container"></div>
+                        </div>
+                        
+                        <div id="review-suggestions" class="review-suggestions">
+                            <h3>Suggestions</h3>
+                            <ul id="review-suggestions-list"></ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Toast notifications -->
+        <div id="toast-container" class="toast-container"></div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

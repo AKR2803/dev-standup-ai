@@ -196,6 +196,36 @@ class GitHubService:
             logger.error("Failed to fetch PR diff", pr_number=pr_number, error=str(e))
             return None
     
+    async def get_file_content(self, file_path: str, branch: str = "main") -> Optional[str]:
+        """Fetch file content from GitHub repository."""
+        url = f"{self.base_url}/repos/{self.repo_owner}/{self.repo_name}/contents/{file_path}"
+        params = {"ref": branch}
+        
+        try:
+            logger.info("Fetching file content", url=url, file_path=file_path, branch=branch)
+            response = requests.get(url, headers=self.headers, params=params)
+            
+            if response.status_code == 404:
+                logger.error("File not found", file_path=file_path, branch=branch, repo=f"{self.repo_owner}/{self.repo_name}")
+                return None
+            
+            response.raise_for_status()
+            file_data = response.json()
+            
+            if file_data.get("encoding") == "base64":
+                import base64
+                content = base64.b64decode(file_data["content"]).decode('utf-8')
+                logger.info("Successfully fetched file content", file_path=file_path, content_length=len(content))
+                return content
+            else:
+                content = file_data.get("content", "")
+                logger.info("Successfully fetched file content (non-base64)", file_path=file_path, content_length=len(content))
+                return content
+                
+        except requests.RequestException as e:
+            logger.error("Failed to fetch file content", file_path=file_path, branch=branch, error=str(e), status_code=getattr(e.response, 'status_code', None))
+            return None
+    
     async def _get_commit_files(self, sha: str) -> List[str]:
         """Get list of files changed in a commit."""
         url = f"{self.base_url}/repos/{self.repo_owner}/{self.repo_name}/commits/{sha}"

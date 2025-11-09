@@ -40,6 +40,8 @@ class APIGatewayHandler:
             'body': json.dumps(body) if isinstance(body, (dict, list)) else body
         }
     
+
+    
     async def get_standup(self, event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         """Get latest standup summary."""
         try:
@@ -58,6 +60,8 @@ class APIGatewayHandler:
     async def generate_standup(self, event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         """Generate new standup summary."""
         try:
+            from datetime import timedelta, timezone
+            
             query_params = event.get('queryStringParameters') or {}
             hours = int(query_params.get('hours', 24))
             
@@ -81,47 +85,54 @@ class APIGatewayHandler:
     async def generate_code_review(self, event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         """Generate code review for PR."""
         try:
+            from datetime import timedelta, timezone
+            
             query_params = event.get('queryStringParameters') or {}
             pr_number = query_params.get('pr_number')
             hours = int(query_params.get('hours', 24))
+            since = datetime.now(timezone.utc) - timedelta(hours=hours)
             
             logger.info("Generating code review", pr_number=pr_number, hours=hours)
             
             if pr_number:
                 # Review specific PR
                 pr_data = await self.github_service.get_pull_request(int(pr_number))
+                if not pr_data:
+                    return self._create_response(404, {'error': f'PR #{pr_number} not found'})
+                
                 review = await self.ai_handler.review_pull_request(pr_data)
+                return self._create_response(200, review.dict())
             else:
                 # Review recent PRs
-                prs = await self.github_service.get_recent_pull_requests(hours)
+                prs = await self.github_service.get_recent_pull_requests(since)
                 reviews = []
                 for pr in prs:
                     review = await self.ai_handler.review_pull_request(pr)
                     reviews.append(review)
-                    await self.dynamodb_service.store_code_review(review)
                 return self._create_response(200, {'reviews': [r.dict() for r in reviews]})
-            
-            await self.dynamodb_service.store_code_review(review)
-            return self._create_response(200, review.dict())
         
         except Exception as e:
             logger.error("Failed to generate review", error=str(e))
             return self._create_response(500, {'error': str(e)})
     
     async def generate_docstring(self, event: Dict[str, Any], context: Any) -> Dict[str, Any]:
-        """Generate docstring for function."""
+        """Generate docstrings for entire file."""
         try:
             body = json.loads(event.get('body', '{}'))
             file_path = body.get('file_path')
-            function_name = body.get('function_name')
-            code = body.get('code')
+            branch = body.get('branch', 'main')
             
-            if not all([file_path, function_name, code]):
-                return self._create_response(400, {'error': 'Missing required fields'})
+            if not file_path:
+                return self._create_response(400, {'error': 'Missing file_path'})
             
-            logger.info("Generating docstring", function=function_name)
+            logger.info("Generating docstrings for file", file=file_path)
             
-            docstring = await self.ai_handler.generate_docstring(file_path, function_name, code)
+            # Fetch file content from GitHub
+            file_content = await self.github_service.get_file_content(file_path, branch)
+            if not file_content:
+                return self._create_response(404, {'error': 'File not found in repository'})
+            
+            docstring = await self.ai_handler.generate_docstring(file_path, "entire_file", file_content)
             return self._create_response(200, docstring.dict())
         
         except Exception as e:
@@ -129,24 +140,29 @@ class APIGatewayHandler:
             return self._create_response(500, {'error': str(e)})
     
     async def generate_test(self, event: Dict[str, Any], context: Any) -> Dict[str, Any]:
-        """Generate unit test for function."""
+        """Generate unit tests for entire file."""
         try:
             body = json.loads(event.get('body', '{}'))
             file_path = body.get('file_path')
-            function_name = body.get('function_name')
-            code = body.get('code')
+            branch = body.get('branch', 'main')
             
-            if not all([file_path, function_name, code]):
-                return self._create_response(400, {'error': 'Missing required fields'})
+            if not file_path:
+                return self._create_response(400, {'error': 'Missing file_path'})
             
-            logger.info("Generating test", function=function_name)
+            logger.info("Generating tests for file", file=file_path)
             
-            test = await self.ai_handler.generate_unit_test(file_path, function_name, code)
+            # Fetch file content from GitHub
+            file_content = await self.github_service.get_file_content(file_path, branch)
+            if not file_content:
+                return self._create_response(404, {'error': 'File not found in repository'})
+            
+            test = await self.ai_handler.generate_unit_test(file_path, "entire_file", file_content)
             return self._create_response(200, test.dict())
         
         except Exception as e:
             logger.error("Failed to generate test", error=str(e))
             return self._create_response(500, {'error': str(e)})
+
     
     async def aggregate_activity(self, event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         """Aggregate GitHub activity."""

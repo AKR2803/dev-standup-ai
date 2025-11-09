@@ -19,11 +19,11 @@ Or as senior software engineer **Lloyd Atkinson** put it —
 
 Our goal is to make developer collaboration more effortless and insightful by addressing a few common friction points:
 
-1. **Standup updates can take extra time to prepare** — turning a daily ritual into a chore.  
-2. **Code reviews often vary in depth and consistency** — slowing down merges and learning.  
-3. **Documentation and tests can lag behind new changes** — making knowledge harder to share.  
-4. **It’s easy to lose track of overall project activity** — especially across fast-moving teams.  
-5. **Teams juggle multiple tools for communication and tracking** — leading to fragmented workflows.
+1. **Standup updates can take extra time to prepare**, turning a daily ritual into a chore.  
+2. **Code reviews often vary in depth and consistency**, slowing down merges and learning.  
+3. **Documentation and tests can lag behind new changes**, making knowledge harder to share.  
+4. **It’s easy to lose track of overall project activity**, especially across fast-moving teams.  
+5. **Teams juggle multiple tools for communication and tracking**, leading to fragmented workflows.
 
 This project automates those repetitive tasks using AI, helping teams stay aligned without the overhead.
 

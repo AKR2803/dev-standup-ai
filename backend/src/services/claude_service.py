@@ -151,6 +151,22 @@ Return a JSON response with this structure:
     
     async def review_pull_request(self, pr_number: int, pr_title: str, diff_content: str) -> CodeReview:
         """Generate AI code review for a pull request."""
+        logger.info("Starting PR review", pr_number=pr_number, diff_length=len(diff_content) if diff_content else 0)
+        
+        # Check if diff content is valid
+        if not diff_content or not diff_content.strip():
+            logger.warning("Empty or invalid diff content", pr_number=pr_number)
+            return CodeReview(
+                pr_number=pr_number,
+                pr_title=pr_title,
+                timestamp=datetime.utcnow(),
+                summary="No changes to review - empty diff",
+                overall_score=5,
+                findings=[],
+                suggestions=["No code changes found in this PR"],
+                approved=False
+            )
+        
         system_prompt = """You are a senior software engineer conducting a thorough code review.
         
         Analyze the provided code diff and provide structured feedback focusing on:
@@ -194,6 +210,12 @@ Categories: logic, security, performance, style, testing"""
         
         try:
             response_text = await self._invoke_claude(system_prompt, user_prompt, 3000)
+            logger.info("Claude response for PR review", pr_number=pr_number, response_length=len(response_text), response_preview=response_text[:200])
+            
+            if not response_text or not response_text.strip():
+                logger.error("Empty response from Claude", pr_number=pr_number)
+                raise ValueError("Empty response from Claude API")
+            
             result = json.loads(response_text)
             
             findings = []

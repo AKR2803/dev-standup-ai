@@ -47,10 +47,25 @@ class AIProcessorHandler:
             # Get PR diff
             diff_content = await self.github_service.get_pr_diff(pr_data.number)
             
-            # Generate AI review
-            review = await self.claude_service.review_pull_request(
-                pr_data.number, pr_data.title, diff_content
-            )
+            if not diff_content:
+                logger.warning("No diff content found for PR", pr_number=pr_data.number)
+                # Create a basic review without AI analysis
+                from datetime import datetime
+                review = CodeReview(
+                    pr_number=pr_data.number,
+                    pr_title=pr_data.title,
+                    timestamp=datetime.utcnow(),
+                    summary="No diff content available for review",
+                    overall_score=5,
+                    findings=[],
+                    suggestions=["Unable to analyze - no diff content available"],
+                    approved=False
+                )
+            else:
+                # Generate AI review
+                review = await self.claude_service.review_pull_request(
+                    pr_data.number, pr_data.title, diff_content
+                )
             
             # Store in database
             await self.dynamodb_service.store_code_review(review)

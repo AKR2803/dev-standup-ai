@@ -524,6 +524,31 @@ body {
     border-left: 4px solid #0ea5e9;
 }
 
+.no-reviews-message {
+    text-align: center;
+    padding: 40px 20px;
+    background: #f9fafb;
+    border-radius: 8px;
+    border: 2px dashed #d1d5db;
+}
+
+.no-reviews-message h3 {
+    color: #374151;
+    margin-bottom: 16px;
+}
+
+.no-reviews-message p {
+    color: #6b7280;
+    margin-bottom: 12px;
+}
+
+.no-reviews-message ul {
+    text-align: left;
+    max-width: 300px;
+    margin: 0 auto;
+    color: #6b7280;
+}
+
 /* Loading states */
 .loading {
     text-align: center;

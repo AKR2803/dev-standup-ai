@@ -135,6 +135,10 @@
                         <label for="file-path-input">File Path:</label>
                         <input type="text" id="file-path-input" placeholder="e.g., backend/src/services/github_service.py">
                     </div>
+                    <div class="input-group">
+                        <label for="docs-branch-input">Branch:</label>
+                        <input type="text" id="docs-branch-input" value="main" placeholder="main">
+                    </div>
                     <button id="generate-docs-submit" class="btn btn-primary">Generate Docstring</button>
                 </div>
 
@@ -168,6 +172,10 @@
                     <div class="input-group">
                         <label for="test-file-path-input">File Path:</label>
                         <input type="text" id="test-file-path-input" placeholder="e.g., backend/src/services/github_service.py">
+                    </div>
+                    <div class="input-group">
+                        <label for="tests-branch-input">Branch:</label>
+                        <input type="text" id="tests-branch-input" value="main" placeholder="main">
                     </div>
                     <button id="generate-tests-submit" class="btn btn-primary">Generate Tests</button>
                 </div>

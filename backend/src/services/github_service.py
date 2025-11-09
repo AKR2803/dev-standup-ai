@@ -189,11 +189,20 @@ class GitHubService:
         headers = {**self.headers, "Accept": "application/vnd.github.v3.diff"}
         
         try:
+            logger.info("Fetching PR diff", pr_number=pr_number, url=url)
             response = requests.get(url, headers=headers)
+            logger.info("PR diff response", pr_number=pr_number, status_code=response.status_code, content_length=len(response.text))
             response.raise_for_status()
-            return response.text
+            
+            diff_content = response.text
+            if not diff_content or not diff_content.strip():
+                logger.warning("Empty diff content received", pr_number=pr_number)
+                return None
+            
+            logger.info("Successfully fetched PR diff", pr_number=pr_number, diff_preview=diff_content[:200])
+            return diff_content
         except requests.RequestException as e:
-            logger.error("Failed to fetch PR diff", pr_number=pr_number, error=str(e))
+            logger.error("Failed to fetch PR diff", pr_number=pr_number, error=str(e), status_code=getattr(e.response, 'status_code', None))
             return None
     
     async def get_file_content(self, file_path: str, branch: str = "main") -> Optional[str]:

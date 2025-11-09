@@ -17,12 +17,38 @@ class ApiService {
             console.log(`API Request: ${config.method || 'GET'} ${url}`);
             const response = await fetch(url, config);
             
+            console.log('Response status:', response.status);
+            console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+            
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+                let errorMessage;
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.error || `HTTP ${response.status}: ${response.statusText}`;
+                } catch {
+                    const errorText = await response.text();
+                    console.error('Error response text:', errorText);
+                    errorMessage = errorText || `HTTP ${response.status}: ${response.statusText}`;
+                }
+                throw new Error(errorMessage);
             }
             
-            return await response.json();
+            const responseText = await response.text();
+            console.log('Response text:', responseText);
+            
+            if (!responseText.trim()) {
+                throw new Error('Empty response from server');
+            }
+            
+            try {
+                return JSON.parse(responseText);
+            } catch (parseError) {
+                console.error('JSON Parse Error:', parseError);
+                console.error('Raw response:', responseText);
+                console.error('Response length:', responseText.length);
+                console.error('First 100 chars:', responseText.substring(0, 100));
+                throw new Error(`Invalid JSON response: ${parseError.message}`);
+            }
         } catch (error) {
             console.error('API Error:', error);
             throw error;
@@ -70,6 +96,10 @@ class ApiService {
         }
         return this.request(`/reviews/generate?${params}`, { method: 'POST' });
     }
+
+    static async healthCheck() {
+        return this.request('/health');
+    }
 }
 
 // UI Manager Class
@@ -81,6 +111,7 @@ class UIManager {
         this.standupData = null;
         
         this.initializeEventListeners();
+        this.checkAPIHealth();
         this.loadHomePage();
     }
 
@@ -357,6 +388,8 @@ class UIManager {
 
     async generateDocstring() {
         const filePath = document.getElementById('file-path-input').value.trim();
+        const branch = document.getElementById('docs-branch-input').value.trim() || 'main';
+        
         if (!filePath) {
             this.showToast('Please enter a file path', 'error');
             return;
@@ -366,7 +399,7 @@ class UIManager {
         this.showResult('docstring-result', false);
         
         try {
-            const response = await ApiService.generateDocs(filePath);
+            const response = await ApiService.generateDocs(filePath, branch);
             this.displayDocstring(response);
         } catch (error) {
             console.error('Docstring error:', error);
@@ -385,6 +418,8 @@ class UIManager {
 
     async generateTestCases() {
         const filePath = document.getElementById('test-file-path-input').value.trim();
+        const branch = document.getElementById('tests-branch-input').value.trim() || 'main';
+        
         if (!filePath) {
             this.showToast('Please enter a file path', 'error');
             return;
@@ -394,7 +429,7 @@ class UIManager {
         this.showResult('tests-result', false);
         
         try {
-            const response = await ApiService.generateTests(filePath);
+            const response = await ApiService.generateTests(filePath, branch);
             this.displayTests(response);
         } catch (error) {
             console.error('Tests error:', error);
@@ -436,12 +471,23 @@ class UIManager {
     displayPRReview(reviewData) {
         // Handle both single review and multiple reviews
         const reviews = reviewData.reviews || [reviewData];
-        const review = reviews[0]; // Display first review for now
         
-        if (!review) {
-            this.showToast('No reviews found', 'error');
+        // Check if we have any reviews
+        if (!reviews || reviews.length === 0 || !reviews[0] || !reviews[0].pr_number) {
+            // Show message for no reviews found
+            const findingsContainer = document.getElementById('review-findings-container');
+            findingsContainer.innerHTML = '<div class="no-reviews-message"><h3>No Pull Requests Found</h3><p>No pull requests were found in the specified time range or the PR number doesn\'t exist.</p><p>Try:</p><ul><li>Increasing the hours to look back</li><li>Checking if the PR number exists</li><li>Creating some pull requests first</li></ul></div>';
+            
+            document.getElementById('review-title').textContent = 'No Reviews Available';
+            document.getElementById('review-score').textContent = '';
+            document.getElementById('review-summary-text').textContent = reviewData.message || 'No pull requests found to review';
+            document.getElementById('review-suggestions-list').innerHTML = '<li>Create some pull requests to get started with reviews</li>';
+            
+            this.showResult('review-result', true);
             return;
         }
+        
+        const review = reviews[0]; // Display first review for now
         
         // Review header
         document.getElementById('review-title').textContent = `PR #${review.pr_number}: ${review.pr_title}`;
@@ -492,6 +538,18 @@ class UIManager {
         }
         
         this.showResult('review-result', true);
+    }
+
+    async checkAPIHealth() {
+        try {
+            console.log('Checking API health...');
+            const health = await ApiService.healthCheck();
+            console.log('API Health Check:', health);
+            this.showToast('API connection successful', 'success');
+        } catch (error) {
+            console.error('API Health Check Failed:', error);
+            this.showToast(`API connection failed: ${error.message}`, 'error');
+        }
     }
 }
 

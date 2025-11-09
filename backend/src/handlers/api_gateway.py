@@ -26,10 +26,7 @@ class APIGatewayHandler:
     def _create_response(self, status_code: int, body: Any, headers: Dict[str, str] = None) -> Dict[str, Any]:
         """Create standardized Lambda response."""
         default_headers = {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+            'Content-Type': 'application/json'
         }
         if headers:
             default_headers.update(headers)
@@ -98,18 +95,32 @@ class APIGatewayHandler:
                 # Review specific PR
                 pr_data = await self.github_service.get_pull_request(int(pr_number))
                 if not pr_data:
-                    return self._create_response(404, {'error': f'PR #{pr_number} not found'})
+                    return self._create_response(404, {'error': f'PR #{pr_number} not found in repository'})
                 
                 review = await self.ai_handler.review_pull_request(pr_data)
                 return self._create_response(200, review.dict())
             else:
                 # Review recent PRs
                 prs = await self.github_service.get_recent_pull_requests(since)
+                if not prs:
+                    return self._create_response(200, {
+                        'reviews': [],
+                        'message': f'No pull requests found in the last {hours} hours'
+                    })
+                
                 reviews = []
                 for pr in prs:
-                    review = await self.ai_handler.review_pull_request(pr)
-                    reviews.append(review)
-                return self._create_response(200, {'reviews': [r.dict() for r in reviews]})
+                    try:
+                        review = await self.ai_handler.review_pull_request(pr)
+                        reviews.append(review)
+                    except Exception as pr_error:
+                        logger.error("Failed to review individual PR", pr_number=pr.number, error=str(pr_error))
+                        continue
+                
+                return self._create_response(200, {
+                    'reviews': [r.dict() for r in reviews],
+                    'message': f'Generated {len(reviews)} reviews from {len(prs)} PRs'
+                })
         
         except Exception as e:
             logger.error("Failed to generate review", error=str(e))

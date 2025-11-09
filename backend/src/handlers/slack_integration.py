@@ -40,7 +40,6 @@ class SlackIntegrationHandler:
             
             return {
                 'statusCode': 400,
-                'headers': {'Content-Type': 'application/json'},
                 'body': json.dumps({'error': 'Invalid request format'})
             }
         
@@ -48,7 +47,6 @@ class SlackIntegrationHandler:
             logger.error("Slack webhook failed", error=str(e))
             return {
                 'statusCode': 500,
-                'headers': {'Content-Type': 'application/json'},
                 'body': json.dumps({'error': str(e)})
             }
     
@@ -65,7 +63,6 @@ class SlackIntegrationHandler:
             
             return {
                 'statusCode': 200,
-                'headers': {'Content-Type': 'application/json'},
                 'body': json.dumps(response)
             }
         
@@ -73,7 +70,6 @@ class SlackIntegrationHandler:
             logger.error("Failed to handle slash command", error=str(e))
             return {
                 'statusCode': 500,
-                'headers': {'Content-Type': 'application/json'},
                 'body': json.dumps({
                     'response_type': 'ephemeral',
                     'text': f'Error processing command: {str(e)}'
@@ -97,7 +93,6 @@ class SlackIntegrationHandler:
             
             return {
                 'statusCode': 200,
-                'headers': {'Content-Type': 'application/json'},
                 'body': json.dumps({'text': 'Processing your request...'})
             }
         
@@ -105,7 +100,6 @@ class SlackIntegrationHandler:
             logger.error("Failed to handle interactive component", error=str(e))
             return {
                 'statusCode': 500,
-                'headers': {'Content-Type': 'application/json'},
                 'body': json.dumps({'text': f'Error: {str(e)}'})
             }
     
@@ -140,13 +134,11 @@ class SlackIntegrationHandler:
             if success:
                 return {
                     'statusCode': 200,
-                    'headers': {'Content-Type': 'application/json'},
                     'body': json.dumps({'message': 'Standup posted to Slack successfully'})
                 }
             else:
                 return {
                     'statusCode': 500,
-                    'headers': {'Content-Type': 'application/json'},
                     'body': json.dumps({'error': 'Failed to post to Slack'})
                 }
         
@@ -154,6 +146,5 @@ class SlackIntegrationHandler:
             logger.error("Failed to post standup", error=str(e))
             return {
                 'statusCode': 500,
-                'headers': {'Content-Type': 'application/json'},
                 'body': json.dumps({'error': str(e)})
             }

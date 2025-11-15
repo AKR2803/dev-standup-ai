@@ -6,7 +6,26 @@ tags: []
 
 # DevStandup AI
 
+![DevStandup AI Thumbnail](/frontend/thumbnail.png)
+
 AI-powered development team standup automation using GitHub activity analysis and Claude AI.
+
+## Why Do This?
+
+As teams scale, developers often spend valuable time on coordination rather than creation.  
+Or as senior software engineer **Lloyd Atkinson** put it —  
+> “Every day, we are expected to repeat the same mantra: *‘Yesterday, I did the work I needed to do. Today, I will do the work I need to do’.*”  
+> — on daily stand-ups becoming a “parody of productivity.” [[LeadDev](https://leaddev.com/velocity/should-daily-stand-die?utm_source=chatgpt.com)]
+
+Our goal is to make developer collaboration more effortless and insightful by addressing a few common friction points:
+
+1. **Standup updates can take extra time to prepare**, turning a daily ritual into a chore.  
+2. **Code reviews often vary in depth and consistency**, slowing down merges and learning.  
+3. **Documentation and tests can lag behind new changes**, making knowledge harder to share.  
+4. **It’s easy to lose track of overall project activity**, especially across fast-moving teams.  
+5. **Teams juggle multiple tools for communication and tracking**, leading to fragmented workflows.
+
+This project automates those repetitive tasks using AI, helping teams stay aligned without the overhead.
 
 ## Features
 
@@ -20,7 +39,7 @@ AI-powered development team standup automation using GitHub activity analysis an
 
 - **Backend**: FastAPI with Claude AI integration
 - **Frontend**: React + TypeScript + Tailwind CSS
-- **Database**: DynamoDB (local for development)
+- **Database**: DynamoDB
 - **AI Models**: Claude 3.5 Sonnet via Anthropic API or AWS Bedrock
 
 ## Quick Start (Local Development)

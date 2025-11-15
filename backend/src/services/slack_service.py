@@ -28,10 +28,14 @@ class SlackService:
             }
             
             response = requests.post(self.webhook_url, json=payload)
-            response.raise_for_status()
             
-            logger.info("Posted standup to Slack via webhook")
-            return True
+            # Slack webhooks return 'ok' as text, not JSON
+            if response.status_code == 200 and response.text.strip() == 'ok':
+                logger.info("Posted standup to Slack via webhook")
+                return True
+            else:
+                logger.error("Slack webhook failed", status=response.status_code, response=response.text)
+                return False
             
         except Exception as e:
             logger.error("Failed to post standup to Slack", error=str(e))
